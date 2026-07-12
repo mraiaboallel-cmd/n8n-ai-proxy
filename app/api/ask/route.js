@@ -1,6 +1,24 @@
 export async function POST(request) {
+  let body;
+
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return Response.json(
+      {
+        status: "failed",
+        error_code: "INVALID_JSON",
+        error: "request body must contain valid JSON",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  try {
+    const payload =
+      body && typeof body === "object" && !Array.isArray(body) ? body : {};
 
     const response = await fetch(process.env.N8N_WEBHOOK_URL, {
       method: "POST",
@@ -9,8 +27,8 @@ export async function POST(request) {
         "x-api-key": process.env.N8N_API_KEY,
       },
       body: JSON.stringify({
-        name: body.name || "Aamer",
-        message: body.message || "",
+        name: payload.name ?? "Aamer",
+        message: payload.message ?? "",
       }),
     });
 
@@ -19,7 +37,7 @@ export async function POST(request) {
     return Response.json(data, {
       status: response.status,
     });
-  } catch (error) {
+  } catch {
     return Response.json(
       {
         status: "failed",
